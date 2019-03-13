@@ -21,8 +21,6 @@ phases:
 
 artifacts:
   files:
-    - distillery_example.tar.gz
-    - appspec.yml
     - templates/infra.yml
     - templates/production.conf
     - bin/unpack
@@ -31,3 +29,15 @@ artifacts:
     - bin/start
     - bin/healthz
   discard-paths: no
+  secondary-artifacts:
+    engine:
+      files:
+        - engine.tar.gz
+        - engine.appspec.yml
+      discard-paths: no
+    web:
+      files:
+        - web.tar.gz
+        - web.appspec.yml
+      discard-paths: no
+

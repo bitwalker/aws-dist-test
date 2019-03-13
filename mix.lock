@@ -17,6 +17,7 @@
   "jason": {:hex, :jason, "1.1.2", "b03dedea67a99223a2eaf9f1264ce37154564de899fd3d8b9a21b1a6fd64afe7", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm"},
   "libcluster": {:hex, :libcluster, "3.0.3", "492e98c7f5c9a6e95b8d51f0b198cf8eab60af3b490f40b958d4bc326d11e40e", [:mix], [{:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: false]}], "hexpm"},
   "libcluster_ec2": {:hex, :libcluster_ec2, "0.4.2", "62e6ebbf0c7c3f4a7be01bed9885bfddfff56d2645e0d600e03514b651759a91", [:mix], [{:ex_aws, "~> 2.0", [hex: :ex_aws, repo: "hexpm", optional: false]}, {:ex_aws_ec2, "~> 2.0", [hex: :ex_aws_ec2, repo: "hexpm", optional: false]}, {:hackney, "~> 1.8", [hex: :hackney, repo: "hexpm", optional: false]}, {:libcluster, "~> 2.0 or ~> 3.0", [hex: :libcluster, repo: "hexpm", optional: false]}, {:poison, ">= 1.0.0", [hex: :poison, repo: "hexpm", optional: false]}, {:sweet_xml, "~> 0.6", [hex: :sweet_xml, repo: "hexpm", optional: false]}, {:tesla, "~> 1.0", [hex: :tesla, repo: "hexpm", optional: false]}], "hexpm"},
+  "libring": {:hex, :libring, "1.4.0", "41246ba2f3fbc76b3971f6bce83119dfec1eee17e977a48d8a9cfaaf58c2a8d6", [:mix], [], "hexpm"},
   "metrics": {:hex, :metrics, "1.0.1", "25f094dea2cda98213cecc3aeff09e940299d950904393b2a29d191c346a8486", [:rebar3], [], "hexpm"},
   "mime": {:hex, :mime, "1.3.1", "30ce04ab3175b6ad0bdce0035cba77bba68b813d523d1aac73d9781b4d193cf8", [:mix], [], "hexpm"},
   "mimerl": {:hex, :mimerl, "1.2.0", "67e2d3f571088d5cfd3e550c383094b47159f3eee8ffa08e64106cdf5e981be3", [:rebar3], [], "hexpm"},

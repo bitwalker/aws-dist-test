@@ -340,10 +340,40 @@ Resources:
         - Key: source
           Value: !Ref ApplicationName
 
-  SubnetDatabaseA:
+  SubnetEngineA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: 
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: !Ref "AWS::Region"
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${ApplicationName}-subnet-engine-a"
+        - Key: source
+          Value: !Ref ApplicationName
+
+  SubnetEngineB:
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: 10.0.3.0/24
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: !Ref "AWS::Region"
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${ApplicationName}-subnet-engine-b"
+        - Key: source
+          Value: !Ref ApplicationName
+
+  SubnetDatabaseA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.4.0/24
       AvailabilityZone:
         Fn::Select:
           - 0
@@ -358,7 +388,7 @@ Resources:
   SubnetDatabaseB:
     Type: AWS::EC2::Subnet
     Properties:
-      CidrBlock: 10.0.4.0/24
+      CidrBlock: 10.0.5.0/24
       AvailabilityZone:
         Fn::Select:
           - 1
@@ -415,6 +445,18 @@ Resources:
       RouteTableId: !Ref RouteTable
       SubnetId: !Ref SubnetAppB
 
+  SubnetEngineARoute:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref SubnetEngineA
+
+  SubnetEngineBRoute:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref SubnetEngineB
+
   SubnetDatabaseARoute:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -468,6 +510,18 @@ Resources:
       NetworkAclId: !Ref NetworkACL
       SubnetId: !Ref SubnetAppB
 
+  NetworkACLSubnetEngineA:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId: !Ref NetworkACL
+      SubnetId: !Ref SubnetEngineA
+
+  NetworkACLSubnetEngineB:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId: !Ref NetworkACL
+      SubnetId: !Ref SubnetEngineB
+
   NetworkACLSubnetDatabaseA:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
@@ -493,6 +547,17 @@ Resources:
         - Key: source
           Value: !Ref ApplicationName
 
+  SecurityGroupEngine:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub "Security group for the ${ApplicationName} engine app"
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${ApplicationName}-sg-engine"
+        - Key: source
+          Value: !Ref ApplicationName
+
   SecurityGroupDatabase:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -515,11 +580,11 @@ Resources:
         - Key: source
           Value: !Ref ApplicationName
 
-  SecurityGroupDatabaseIngressApp:
+  SecurityGroupDatabaseIngressEngine:
     Type: AWS::EC2::SecurityGroupIngress
     Description: "Allow access to the database from hosts in the application security group"
     Properties:
-      SourceSecurityGroupId: !GetAtt SecurityGroupApp.GroupId
+      SourceSecurityGroupId: !GetAtt SecurityGroupEngine.GroupId
       SourceSecurityGroupOwnerId: !Ref "AWS::AccountId"
       GroupId: !GetAtt SecurityGroupDatabase.GroupId
       IpProtocol: tcp
@@ -532,6 +597,16 @@ Resources:
     Properties:
       CidrIp: 0.0.0.0/0
       GroupId: !GetAtt SecurityGroupApp.GroupId
+      IpProtocol: tcp
+      FromPort: '22'
+      ToPort: '22'
+
+  SecurityGroupEngineIngressSSH:
+    Type: AWS::EC2::SecurityGroupIngress
+    Description: "Allow SSH to hosts in the Engine application security group"
+    Properties:
+      CidrIp: 0.0.0.0/0
+      GroupId: !GetAtt SecurityGroupEngine.GroupId
       IpProtocol: tcp
       FromPort: '22'
       ToPort: '22'
@@ -554,6 +629,18 @@ Resources:
         SourceSecurityGroupId: !GetAtt SecurityGroupApp.GroupId
         SourceSecurityGroupOwnerId: !Ref "AWS::AccountId"
         GroupId: !GetAtt SecurityGroupApp.GroupId
+        IpProtocol: tcp
+        # This range covers up to 100 nodes, tweak as needed
+        FromPort: '4369'
+        ToPort: '4470'
+
+  SecurityGroupEngineIngressErlDist:
+    Type: AWS::EC2::SecurityGroupIngress
+    Description: "Allow Erlang Distribution to communicate between Engine application nodes"
+    Properties:
+        SourceSecurityGroupId: !GetAtt SecurityGroupEngine.GroupId
+        SourceSecurityGroupOwnerId: !Ref "AWS::AccountId"
+        GroupId: !GetAtt SecurityGroupEngine.GroupId
         IpProtocol: tcp
         # This range covers up to 100 nodes, tweak as needed
         FromPort: '4369'
@@ -594,6 +681,14 @@ Resources:
     Properties:
       CidrIp: 0.0.0.0/0
       GroupId: !GetAtt SecurityGroupApp.GroupId
+      IpProtocol: '-1'
+
+  SecurityGroupEngineEgressAll:
+    Type: AWS::EC2::SecurityGroupEgress
+    Description: "Allow all outbound traffic from the Engine application security group"
+    Properties:
+      CidrIp: 0.0.0.0/0
+      GroupId: !GetAtt SecurityGroupEngine.GroupId
       IpProtocol: '-1'
 
   SecurityGroupALBEgressAll:
@@ -658,9 +753,9 @@ Resources:
             TargetGroupArn: !Ref TargetGroup
         LoadBalancerArn: !Ref LoadBalancer
 
-  # Autoscaling Group
+  # Autoscaling Groups
   
-  ASG:
+  EngineASG:
     Type: AWS::AutoScaling::AutoScalingGroup
     DependsOn: InternetGatewayAttachment
     Properties:
@@ -671,7 +766,48 @@ Resources:
         - Fn::Select:
             - 1
             - Fn::GetAZs: !Ref "AWS::Region"
-      LaunchConfigurationName: !Ref LaunchConfig
+      LaunchConfigurationName: !Ref EngineLaunchConfig
+      HealthCheckGracePeriod: '300'
+      HealthCheckType: EC2
+      MaxSize: '2'
+      MinSize: '2'
+      DesiredCapacity: '2'
+      VPCZoneIdentifier:
+        - !Ref SubnetEngineA
+        - !Ref SubnetEngineB
+      Tags:
+        - Key: source
+          Value: !Ref ApplicationName
+          PropagateAtLaunch: true
+        - Key: Name
+          Value: !Sub "${ApplicationName}-engine-${EnvironmentName}"
+          PropagateAtLaunch: true
+        - Key: distribution-group
+          Value: !Sub "${ApplicationName}-${EnvironmentName}"
+          PropagateAtLaunch: true
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT30M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        PauseTime: PT15M
+        WaitOnResourceSignals: true
+
+  WebASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    # Web depends on Engine, so that dependencies are satisifed in the right order
+    DependsOn: EngineASG
+    Properties:
+      AvailabilityZones:
+        - Fn::Select:
+            - 0
+            - Fn::GetAZs: !Ref "AWS::Region"
+        - Fn::Select:
+            - 1
+            - Fn::GetAZs: !Ref "AWS::Region"
+      LaunchConfigurationName: !Ref WebLaunchConfig
       TargetGroupARNs:
         - !Ref TargetGroup
       HealthCheckGracePeriod: '300'
@@ -687,6 +823,9 @@ Resources:
           Value: !Ref ApplicationName
           PropagateAtLaunch: true
         - Key: Name
+          Value: !Sub "${ApplicationName}-web-${EnvironmentName}"
+          PropagateAtLaunch: true
+        - Key: distribution-group
           Value: !Sub "${ApplicationName}-${EnvironmentName}"
           PropagateAtLaunch: true
     CreationPolicy:
@@ -699,10 +838,12 @@ Resources:
         PauseTime: PT15M
         WaitOnResourceSignals: true
 
-  LaunchConfig:
+  # Launch Configurations
+
+  EngineLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      LaunchConfigurationName: !Sub "${ApplicationName}-launchconfig"
+      LaunchConfigurationName: !Sub "${ApplicationName}-engine-launchconfig"
       ImageId: !FindInMap [AWSRegionToAMI, !Ref "AWS::Region", AMI]
       InstanceType: t2.micro
       KeyName: !Ref SSHKeyName
@@ -712,16 +853,16 @@ Resources:
         Fn::Base64: !Sub |
           #!/usr/bin/env bash
           function fail(){
-            /opt/aws/bin/cfn-signal -e 1 -r "$1" --region ${AWS::Region} --stack ${AWS::StackId} --resource ASG
+            /opt/aws/bin/cfn-signal -e 1 -r "$1" --region ${AWS::Region} --stack ${AWS::StackId} --resource EngineASG
             exit 1
           }
           yum update -y
           yum install -y aws-cfn-bootstrap
-          /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackId} --resource LaunchConfig
+          /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackId} --resource EngineLaunchConfig
           /opt/aws/bin/cfn-hup || fail 'Failed to start cfn-hup'
-          /opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} --stack ${AWS::StackId} --resource ASG
+          /opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} --stack ${AWS::StackId} --resource EngineASG
       SecurityGroups:
-        - !Ref SecurityGroupApp
+        - !Ref SecurityGroupEngine
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
           Ebs:
@@ -749,8 +890,8 @@ Resources:
               content: !Sub |
                 [cfn-auto-reloader-hook]
                 triggers=post.update
-                path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init
-                action=/usr/local/bin/cfn-init -v -s ${AWS::StackId} -r LaunchConfig --region ${AWS::Region}
+                path=Resources.EngineLaunchConfig.Metadata.AWS::CloudFormation::Init
+                action=/usr/local/bin/cfn-init -v -s ${AWS::StackId} -r EngineLaunchConfig --region ${AWS::Region}
                 runas=root
               group: root
               owner: root
@@ -782,6 +923,108 @@ Resources:
                 DATABASE_HOST=${DatabaseInternalDNS}
                 DATABASE_USER=${DatabaseUser}
                 DATABASE_NAME=${DatabaseName}
+                AWS_REGION=${AWS::Region}
+              owner: ec2-user
+              group: ec2-user
+          commands:
+            setup-network-environment:
+              command: "systemctl start setup-network-environment.service"
+            config-bucket:
+              command: !Sub |
+                echo "LANG=en_US.UTF-8" >> /etc/environment
+                echo "LANGUAGE=en_US" >> /etc/environment
+                echo "LC_ALL=en_US.UTF-8" >> /etc/environment
+                echo "LC_CTYPE=en_US.UTF-8" >> /etc/environment
+            set-permissions:
+              command: |
+                chown -R ec2-user:ec2-user /opt/app
+            codedeploy-agent:
+              cwd: /home/ec2-user
+              command: !Sub |
+                curl -O https://aws-codedeploy-${AWS::Region}.s3.amazonaws.com/latest/install
+                chmod +x ./install
+                ./install auto
+
+  WebLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      LaunchConfigurationName: !Sub "${ApplicationName}-web-launchconfig"
+      ImageId: !FindInMap [AWSRegionToAMI, !Ref "AWS::Region", AMI]
+      InstanceType: t2.micro
+      KeyName: !Ref SSHKeyName
+      IamInstanceProfile: !GetAtt InstanceProfile.Arn
+      AssociatePublicIpAddress: true
+      UserData:
+        Fn::Base64: !Sub |
+          #!/usr/bin/env bash
+          function fail(){
+            /opt/aws/bin/cfn-signal -e 1 -r "$1" --region ${AWS::Region} --stack ${AWS::StackId} --resource WebASG
+            exit 1
+          }
+          yum update -y
+          yum install -y aws-cfn-bootstrap
+          /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackId} --resource WebLaunchConfig
+          /opt/aws/bin/cfn-hup || fail 'Failed to start cfn-hup'
+          /opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} --stack ${AWS::StackId} --resource WebASG
+      SecurityGroups:
+        - !Ref SecurityGroupApp
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 8
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          packages:
+            rpm:
+              epel: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+            yum:
+              unzip: []
+              ruby: []
+              jq: []
+          files:
+            /etc/cfn/cfn-hup.conf:
+              content: !Sub |
+                [main]
+                stack=${AWS::StackId}
+                region=${AWS::Region}
+              group: root
+              owner: root
+              mode: '000400'
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content: !Sub |
+                [cfn-auto-reloader-hook]
+                triggers=post.update
+                path=Resources.WebLaunchConfig.Metadata.AWS::CloudFormation::Init
+                action=/usr/local/bin/cfn-init -v -s ${AWS::StackId} -r WebLaunchConfig --region ${AWS::Region}
+                runas=root
+              group: root
+              owner: root
+              mode: '000400'
+            /usr/local/bin/setup-network-environment:
+              source: "https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment"
+              encoding: plain
+              owner: ec2-user
+              group: ec2-user
+              mode: '000777'
+            /lib/systemd/system/setup-network-environment.service:
+              content: |
+                [Unit]
+                Description=Setup Network Environment
+                Documentation=https://github.com/kelseyhightower/setup-network-environment
+                Requires=network.service
+                After=network.service
+
+                [Service]
+                ExecStart=/usr/local/bin/setup-network-environment
+                RemainAfterExit=yes
+                Type=oneshot
+            /opt/app/etc/environment:
+              content: !Sub |
+                HOME=/opt/app
+                REPLACE_OS_VARS=true
+                APPLICATION_NAME=${ApplicationName}
+                ENVIRONMENT_NAME=${EnvironmentName}
                 AWS_REGION=${AWS::Region}
               owner: ec2-user
               group: ec2-user
@@ -884,7 +1127,8 @@ Resources:
       ServiceRoleArn: 
         Fn::ImportValue: !Sub "CodeDeployServiceRoleArn-${ApplicationName}"
       AutoScalingGroups:
-        - !Ref ASG
+        - !Ref WebASG
+        - !Ref EngineASG
 
 Outputs:
     WebsiteURL: 

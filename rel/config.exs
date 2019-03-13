@@ -19,14 +19,6 @@ environment :prod do
   set include_src: false
   set cookie: :"niacks]vOyv&k6[sBF]y4}xxHn|vC6~@{kTh5[P>4>2dGG{F:cpxKE7G78c%JWtU"
 
-  # Custom vm.args
-  set vm_args: "rel/vm.args"
-
-  # Custom commands
-  set commands: [
-    migrate: "rel/commands/migrate.sh"
-  ]
-
   # We use an extra config evaluated solely at runtime
   set config_providers: [
     {Mix.Releases.Config.Providers.Elixir, ["${RELEASE_ROOT_DIR}/etc/config.exs"]}
@@ -37,16 +29,34 @@ environment :prod do
   # directory on the target
   set overlays: [
     {:mkdir, "etc"},
-    {:template, "rel/etc/distillery-example.service", "etc/distillery-example.service"},
-    {:copy, "rel/etc/config.exs", "etc/config.exs"}
+    {:template, "rel/etc/<%= release_name %>.service", "etc/<%= release_name %>.service"},
+    {:copy, "rel/etc/<%= release_name %>.config.exs", "etc/config.exs"}
   ]
 end
 
-
-release :distillery_example do
-  set version: current_version(:distillery_example)
+release :engine do
+  set version: current_version(:engine)
   set applications: [
+    :engine,
+    :runtime_tools,
+  ]
+
+  # Custom vm.args
+  set vm_args: "rel/engine.vm.args"
+
+  # Custom commands
+  set commands: [
+    migrate: "rel/commands/migrate.sh"
+  ]
+end
+
+release :web do
+  set version: current_version(:web)
+  set applications: [
+    :web,
     :runtime_tools
   ]
-end
 
+  # Custom vm.args
+  set vm_args: "rel/web.vm.args"
+end

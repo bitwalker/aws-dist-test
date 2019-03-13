@@ -1,0 +1,17 @@
+version: 0.0
+os: linux
+files:
+  - source: .
+    destination: /opt/app
+hooks:
+  ApplicationStop:
+    - location: bin/stop web
+      timeout: 300
+  AfterInstall:
+    - location: bin/unpack web
+  ApplicationStart:
+    - location: bin/start web
+      timeout: 3600
+  ValidateService:
+    - location: bin/healthz
+      timeout: 3600

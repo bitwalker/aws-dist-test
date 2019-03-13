@@ -2,8 +2,10 @@
 
 set -e
 
-if systemctl is-active distillery-example.service; then
-    systemctl stop distillery-example.service
+APP="$1"
+
+if systemctl is-active "${APP}".service; then
+    systemctl stop "${APP}".service
 fi
 
 exit 0
