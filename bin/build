@@ -60,7 +60,7 @@ function do_build(){
 }
 
 function do_post_build(){
-    echo "==> Nothing to do in post-build!"
+    echo "==> Executing post-build.."
 }
 
 if [ -z "$1" ]; then

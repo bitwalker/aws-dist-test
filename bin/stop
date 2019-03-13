@@ -2,10 +2,10 @@
 
 set -e
 
-APP="$1"
+source /opt/app/etc/environment
 
-if systemctl is-active "${APP}".service; then
-    systemctl stop "${APP}".service
+if systemctl is-active "${APPLICATION_TYPE}.service"; then
+    systemctl stop "${APPLICATION_TYPE}.service"
 fi
 
 exit 0

@@ -2,8 +2,19 @@
 
 set -e
 
-# Timeout after 30s if we still haven't gotten a response
-timeout 30s bash <<EOT
+cd /opt/app || exit 1
+
+source ./etc/environment
+
+check_engine(){
+    if ! bin/engine ping; then
+        exit 1
+    fi
+}
+
+check_web(){
+    # Timeout after 30s if we still haven't gotten a response
+    timeout 30s bash <<EOT
 # Wait until an HTTP request succeeds against localhost:PORT
 function healthz(){
     while true; do
@@ -15,3 +26,17 @@ function healthz(){
 
 healthz
 EOT
+}
+
+case "${APPLICATION_TYPE}" in
+  engine)
+      check_engine
+      ;;
+  web)
+      check_web
+      ;;
+  *)
+      echo "invalid app type: '${APPLICATION_TYPE}'!"
+      exit 2
+      ;;
+esac

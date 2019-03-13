@@ -21,8 +21,6 @@ phases:
 
 artifacts:
   files:
-    - templates/infra.yml
-    - templates/production.conf
     - bin/unpack
     - bin/stop
     - bin/migrate
@@ -30,14 +28,18 @@ artifacts:
     - bin/healthz
   discard-paths: no
   secondary-artifacts:
-    engine:
+    infra:
       files:
+        - templates/infra.yml
+        - templates/production.conf
+      discard-paths: no
+    apps:
+      files:
+        - bin/unpack
+        - bin/stop
+        - bin/migrate
+        - bin/start
+        - bin/healthz
         - engine.tar.gz
-        - engine.appspec.yml
-      discard-paths: no
-    web:
-      files:
         - web.tar.gz
-        - web.appspec.yml
       discard-paths: no
-

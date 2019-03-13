@@ -2,8 +2,8 @@
 
 set -e
 
-APP="$1"
+source /opt/app/etc/environment
 
-systemctl start "${APP}".service
+systemctl start "${APPLICATION_TYPE}.service"
 
 exit 0

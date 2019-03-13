@@ -5,12 +5,15 @@ files:
     destination: /opt/app
 hooks:
   ApplicationStop:
-    - location: bin/stop web
+    - location: bin/stop
       timeout: 300
   AfterInstall:
-    - location: bin/unpack web
+    - location: bin/unpack
   ApplicationStart:
-    - location: bin/start web
+    - location: bin/migrate
+      runas: ec2-user
+      timeout: 300
+    - location: bin/start
       timeout: 3600
   ValidateService:
     - location: bin/healthz

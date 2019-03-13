@@ -119,7 +119,8 @@ Resources:
                 Version: 1
                 Provider: CodeBuild
               OutputArtifacts:
-                - Name: Built
+                - Name: infra
+                - Name: apps
               Configuration: 
                 ProjectName: !Ref CodeBuild
         - Name: Deploy
@@ -127,7 +128,7 @@ Resources:
             - Name: DeployInfra
               RunOrder: 1
               InputArtifacts:
-                - Name: Built
+                - Name: infra
               ActionTypeId:
                 Category: Deploy
                 Owner: AWS
@@ -138,8 +139,8 @@ Resources:
                 RoleArn: !Sub "${CodePipelineCloudFormationRole.Arn}"
                 Capabilities: CAPABILITY_NAMED_IAM
                 StackName: !Sub "${ApplicationName}-production"
-                TemplatePath: Built::templates/infra.yml
-                TemplateConfiguration: Built::templates/production.conf
+                TemplatePath: infra::templates/infra.yml
+                TemplateConfiguration: infra::templates/production.conf
                 ParameterOverrides: !Sub |
                   {
                     "ApplicationName": "${ApplicationName}",
@@ -149,7 +150,7 @@ Resources:
             - Name: DeployApp
               RunOrder: 2
               InputArtifacts:
-                - Name: Built
+                - Name: apps
               ActionTypeId:
                 Category: Deploy
                 Owner: AWS

@@ -918,6 +918,7 @@ Resources:
               content: !Sub |
                 HOME=/opt/app
                 REPLACE_OS_VARS=true
+                APPLICATION_TYPE=engine
                 APPLICATION_NAME=${ApplicationName}
                 ENVIRONMENT_NAME=${EnvironmentName}
                 DATABASE_HOST=${DatabaseInternalDNS}
@@ -1023,6 +1024,7 @@ Resources:
               content: !Sub |
                 HOME=/opt/app
                 REPLACE_OS_VARS=true
+                APPLICATION_TYPE=web
                 APPLICATION_NAME=${ApplicationName}
                 ENVIRONMENT_NAME=${EnvironmentName}
                 AWS_REGION=${AWS::Region}

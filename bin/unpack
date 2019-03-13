@@ -5,20 +5,20 @@ set -x
 
 cd /opt/app || exit 1
 
-APP="$1"
+source ./etc/environment
 
 # Extract release
-tar -xzf "${APP}".tar.gz
+tar -xzf "${APPLICATION_TYPE}.tar.gz"
 # Clean up archive
-rm "${APP}".tar.gz
+rm "${APPLICATION_TYPE}.tar.gz"
 # Set permissions
 chown -R ec2-user:ec2-user /opt/app
 
 # Set up systemd service if not already done
 __cwd="$(pwd)"
-if [ ! -L /lib/systemd/system/"${APP}".service ]; then
+if [ ! -L "/lib/systemd/system/${APPLICATION_TYPE}.service" ]; then
     pushd /lib/systemd/system
-    ln -s "${__cwd}/etc/${APP}.service" "${APP}".service
+    ln -s "${__cwd}/etc/${APP}.service" "${APPLICATION_TYPE}.service"
     popd
 fi
 

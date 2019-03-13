@@ -26,6 +26,7 @@ image: ## Mimic CodeBuild build
 	docker run --rm -e BUILD_DIR=/opt/app -v $(PWD):/opt/app -it centos:7 /opt/app/bin/build all
 
 release: refresh-deps release-engine release-web ## Build a release of the application with MIX_ENV=prod
+	@mkdir -p target/{engine,web}
 	@cp _build/prod/rel/engine/releases/$(ENGINE_VERSION)/engine.tar.gz engine.tar.gz
 	@cp _build/prod/rel/web/releases/$(WEB_VERSION)/web.tar.gz web.tar.gz
 

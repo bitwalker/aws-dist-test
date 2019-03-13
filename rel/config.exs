@@ -38,7 +38,6 @@ release :engine do
   set version: current_version(:engine)
   set applications: [
     :engine,
-    :runtime_tools,
   ]
 
   # Custom vm.args
@@ -54,7 +53,6 @@ release :web do
   set version: current_version(:web)
   set applications: [
     :web,
-    :runtime_tools
   ]
 
   # Custom vm.args

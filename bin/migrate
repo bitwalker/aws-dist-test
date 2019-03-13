@@ -18,6 +18,11 @@ set -o allexport
 source ./etc/environment
 set +o allexport
 
+# Skip migrations if this is not an engine node
+if [ "${APPLICATION_TYPE}" != "engine" ]; then
+    exit 0
+fi
+
 bin/engine migrate
 
 exit $?
