@@ -40,7 +40,7 @@ config :engine, Example.Repo,
 config :services, Services.Database, Engine.Database
 config :services, Services.Todos, Engine.Todo
 
-config :services, Services.Cluster
+config :services, Services.Cluster,
   topologies: [
     ec2: [
       strategy: ClusterEC2.Strategy.Tags,
