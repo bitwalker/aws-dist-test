@@ -9,7 +9,7 @@ config :engine,
 config :services, Services.Database, Engine.Database
 config :services, Services.Todos, Engine.Todo
 
-config :services, Services.Cluster
+config :services, Services.Cluster,
   topologies: [
     local: [
       strategy: Cluster.Strategy.Epmd,
