@@ -61,4 +61,5 @@ config :services, Services.Registry,
   log_level: :warn,
   broadcast_period: 10,
   max_silent_periods: 2,
-  pool_size: 1
+  pool_size: 1,
+  name: Services.Registry.PubSub
