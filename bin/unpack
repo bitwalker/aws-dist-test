@@ -18,7 +18,7 @@ chown -R ec2-user:ec2-user /opt/app
 __cwd="$(pwd)"
 if [ ! -L "/lib/systemd/system/${APPLICATION_TYPE}.service" ]; then
     pushd /lib/systemd/system
-    ln -s "${__cwd}/etc/${APP}.service" "${APPLICATION_TYPE}.service"
+    ln -s "${__cwd}/etc/${APPLICATION_TYPE}.service" "${APPLICATION_TYPE}.service"
     popd
 fi
 
