@@ -4,7 +4,9 @@ set -e
 
 cd /opt/app || exit 1
 
+set -o allexport
 source ./etc/environment
+set +o allexport
 
 check_engine(){
     if ! bin/engine ping; then
