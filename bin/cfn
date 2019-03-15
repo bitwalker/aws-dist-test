@@ -9,7 +9,7 @@ APP_NAME="${APP_NAME:-distillery-aws-example}"
 GITHUB_TOKEN="$GITHUB_TOKEN"
 if [ -z "$GITHUB_TOKEN" ]; then
     if [ -f "${SCRIPT_DIR}/../GITHUB_TOKEN" ]; then
-        GITHUB_TOKEN="$(cat "${SCRIP_DIR}/../GITHUB_TOKEN")"
+        GITHUB_TOKEN="$(cat "${SCRIPT_DIR}/../GITHUB_TOKEN")"
     fi
 fi
 
