@@ -6,14 +6,16 @@ defmodule Services.Application do
   use Application
 
   def start(_type, _args) do
-    topologies = Application.get_env(:services, Services.Cluster, [])
+    topologies = 
+      Application.get_env(:services, Services.Cluster, [])
+      |> Keyword.fetch!(:topologies)
     registry = Application.get_env(:services, Services.Registry, [])
 
     # List all child processes to be supervised
     children = [
-      {Task.Supervisor, [[name: Services.TaskSupervisor]]},
+      {Task.Supervisor, [name: Services.TaskSupervisor]},
       {Cluster.Supervisor, [topologies, [name: Services.Cluster]]},
-      {Services.Registry, [registry]},
+      {Services.Registry, registry},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
