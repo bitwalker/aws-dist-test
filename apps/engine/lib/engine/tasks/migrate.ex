@@ -17,7 +17,7 @@ defmodule Engine.Tasks.Migrate do
 
     # Start the repo
     IO.puts "==> Starting repo"
-    {:ok, _pid} = Engine.Repo.start_link(pool_size: 1, log: true, log_sql: true)
+    {:ok, _pid} = Engine.Repo.start_link(pool_size: 1, log: :debug, log_sql: true)
 
     # Run the migrations for the repo
     IO.puts "==> Running migrations"

@@ -30,7 +30,7 @@ db_password =
       raise "Unable to get database password, command exited with status #{status}:\n#{output}"
   end
 
-config :engine, Example.Repo,
+config :engine, Engine.Repo,
   username: System.get_env("DATABASE_USER"),
   password: db_password,
   database: System.get_env("DATABASE_NAME"),
@@ -44,9 +44,11 @@ config :services, Services.Cluster,
   topologies: [
     ec2: [
       strategy: ClusterEC2.Strategy.Tags,
-      ec2_tagname: "Name",
-      ec2_tagvalue: "#{app}-#{env}",
-      app_prefix: "distillery_example"
+      config: [
+        ec2_tagname: "Name",
+        ec2_tagvalue: "#{app}-#{env}",
+        app_prefix: "distillery_example"
+      ]
     ]
   ]
 

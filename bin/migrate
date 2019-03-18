@@ -4,7 +4,7 @@ set -e
 
 cd /opt/app || exit 1
 
-source /etc/network-environment
+#source /etc/network-environment
 
 # Imported from /etc/network-environment
 #export DEFAULT_IPV4
@@ -15,6 +15,7 @@ source /etc/network-environment
 #fi
 # Import env
 set -o allexport
+source /etc/network-environment
 source ./etc/environment
 set +o allexport
 

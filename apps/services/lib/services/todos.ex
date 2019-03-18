@@ -66,6 +66,11 @@ defmodule Services.Todos do
   end
 
   @doc false
+  def child_spec(args) do
+    impl().child_spec(args)
+  end
+
+  @doc false
   def impl do
     mod = Application.fetch_env!(:services, __MODULE__)
     unless is_atom(mod) do

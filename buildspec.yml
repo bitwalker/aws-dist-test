@@ -26,6 +26,7 @@ artifacts:
     - bin/migrate
     - bin/start
     - bin/healthz
+    - appspec.yml
   discard-paths: no
   secondary-artifacts:
     infra:

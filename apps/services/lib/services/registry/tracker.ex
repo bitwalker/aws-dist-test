@@ -21,7 +21,7 @@ defmodule Services.Registry.Tracker do
   @spec find(type :: term) :: {:ok, node, pid}
   @spec find(type :: term, key :: term) :: {:ok, node, pid}
   def find(type, key \\ self()) do
-    with [{_, ring}] <- :ets.lookup(__MODULE__, type),
+    with [{_, ring}] <- :ets.lookup(__MODULE__.Types, type),
          {service_node, service_pid} <- HashRing.key_to_node(ring, key) do
       {:ok, service_node, service_pid}
     else
@@ -31,18 +31,23 @@ defmodule Services.Registry.Tracker do
   end
 
   @doc false
-  def start_link(opts \\ []) when is_list(opts) do
-    pubsub_server = Keyword.get(opts, :name, Services.Registry.PubSub)
+  def child_spec(args) do
+    %{id: __MODULE__,
+      start: {__MODULE__, :start_link, args},
+      type: :worker}
+  end
 
+  @doc false
+  def start_link(opts \\ []) when is_list(opts) do
     full_opts =
-      Keyword.merge([name: __MODULE__, pubsub_server: pubsub_server], opts)
+      Keyword.merge(opts, [name: __MODULE__, pubsub_server: Services.Registry.PubSub])
 
     Phoenix.Tracker.start_link(__MODULE__, full_opts, full_opts)
   end
 
   @doc false
   def init(opts) when is_list(opts) do
-    :ets.new(__MODULE__, [:public, :set, :named_table])
+    :ets.new(__MODULE__.Types, [:public, :set, :named_table])
     server = Keyword.fetch!(opts, :pubsub_server)
     {:ok, %{pubsub_server: server, hash_rings: %{}}}
   end
@@ -57,7 +62,7 @@ defmodule Services.Registry.Tracker do
           |> remove_leaves(event, state)
           |> add_joins(event, state)
 
-        :ets.insert(__MODULE__, {type, hash_ring})
+        :ets.insert(__MODULE__.Types, {type, hash_ring})
         Map.put(hash_rings, type, hash_ring)
       end)
 

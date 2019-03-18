@@ -28,6 +28,10 @@ defmodule Services.Database do
     impl().start_link(args)
   end
 
+  @doc false
+  def child_spec(args) do
+    impl().child_spec(args)
+  end
 
   @doc false
   def impl() do
