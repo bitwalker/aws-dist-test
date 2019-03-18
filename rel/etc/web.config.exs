@@ -35,7 +35,7 @@ config :services, Services.Cluster,
     ec2: [
       strategy: ClusterEC2.Strategy.Tags,
       config: [
-        ec2_tagname: "Name",
+        ec2_tagname: "distribution-group",
         ec2_tagvalue: "#{app}-#{env}",
         app_prefix: "distillery_example"
       ]
