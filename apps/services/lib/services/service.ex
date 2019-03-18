@@ -70,7 +70,7 @@ defmodule Services.Service do
 
       {:ok, _host, pid} ->
         # Proxy call through remote service
-        case GenServer.call(pid, {function, args}, :infinity) do
+        case GenServer.call(pid, {:request, function, args}, :infinity) do
           {^service_type, :exception, ex, trace} ->
             # Reraise original exception, preserving the stack trace
             reraise ex, trace
