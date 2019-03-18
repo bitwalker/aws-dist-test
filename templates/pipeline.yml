@@ -147,7 +147,7 @@ Resources:
                     "EnvironmentName": "production",
                     "SSHKeyName": "${SSHKeyName}"
                   }
-            - Name: DeployApp
+            - Name: DeployEngine
               RunOrder: 2
               InputArtifacts:
                 - Name: apps
@@ -158,7 +158,19 @@ Resources:
                 Provider: CodeDeploy
               Configuration: 
                 ApplicationName: !Ref CodeDeployApplication
-                DeploymentGroupName: !Sub "${ApplicationName}-production"
+                DeploymentGroupName: !Sub "${ApplicationName}-production-engine"
+            - Name: DeployWeb
+              RunOrder: 2
+              InputArtifacts:
+                - Name: apps
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CodeDeploy
+              Configuration: 
+                ApplicationName: !Ref CodeDeployApplication
+                DeploymentGroupName: !Sub "${ApplicationName}-production-web"
 
   CodeBuild:
     Type: AWS::CodeBuild::Project

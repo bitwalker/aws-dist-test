@@ -20,13 +20,6 @@ phases:
       - bin/build post_build
 
 artifacts:
-  files:
-    - bin/unpack
-    - bin/stop
-    - bin/migrate
-    - bin/start
-    - bin/healthz
-    - appspec.yml
   discard-paths: no
   secondary-artifacts:
     infra:
@@ -41,6 +34,7 @@ artifacts:
         - bin/migrate
         - bin/start
         - bin/healthz
+        - appspec.yml
         - engine.tar.gz
         - web.tar.gz
       discard-paths: no

@@ -1120,17 +1120,27 @@ Resources:
         - Key: source
           Value: !Ref ApplicationName
           
-  CodeDeployDeploymentGroup:
+  CodeDeployDeploymentGroupEngine:
     Type: AWS::CodeDeploy::DeploymentGroup
     Properties:
-      DeploymentGroupName: !Sub "${ApplicationName}-${EnvironmentName}"
+      DeploymentGroupName: !Sub "${ApplicationName}-${EnvironmentName}-engine"
+      ApplicationName: 
+        Fn::ImportValue: !Sub "CodeDeployApplication-${ApplicationName}"
+      ServiceRoleArn: 
+        Fn::ImportValue: !Sub "CodeDeployServiceRoleArn-${ApplicationName}"
+      AutoScalingGroups:
+        - !Ref EngineASG
+
+  CodeDeployDeploymentGroupWeb:
+    Type: AWS::CodeDeploy::DeploymentGroup
+    Properties:
+      DeploymentGroupName: !Sub "${ApplicationName}-${EnvironmentName}-web"
       ApplicationName: 
         Fn::ImportValue: !Sub "CodeDeployApplication-${ApplicationName}"
       ServiceRoleArn: 
         Fn::ImportValue: !Sub "CodeDeployServiceRoleArn-${ApplicationName}"
       AutoScalingGroups:
         - !Ref WebASG
-        - !Ref EngineASG
 
 Outputs:
     WebsiteURL: 

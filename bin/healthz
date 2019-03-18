@@ -10,9 +10,21 @@ source ./etc/environment
 set +o allexport
 
 check_engine(){
-    if ! bin/engine ping; then
-        exit 1
-    fi
+    # Timeout after 30s if we still haven't gotten a pong
+    timeout 30s bash <<EOT
+# Wait until an HTTP request succeeds against localhost:PORT
+function healthz(){
+    while true; do
+        if bin/engine ping >/dev/null; then
+            exit 0
+        else
+            echo "pang"
+        fi
+    done
+}
+
+healthz
+EOT
 }
 
 check_web(){
